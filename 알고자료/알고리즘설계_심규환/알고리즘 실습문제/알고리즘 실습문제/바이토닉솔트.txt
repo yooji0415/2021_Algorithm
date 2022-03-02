@@ -1,0 +1,75 @@
+#include <iostream>
+#include <time.h>
+using namespace std;
+
+#define count 32
+#define Ascending 1
+#define Descending 0
+
+class bitonicsort
+{
+private:
+   int a[count];
+public:
+   void cmp_swp(int a[], int i, int j, int dir)
+   {
+      int temp = 0;
+      if (dir == (a[i] > a[j]))
+      {
+         temp = a[i];
+         a[i] = a[j];
+         a[j] = temp;
+      }
+   }
+
+   void bitonicMerge(int a[], int low, int cnt, int dir)
+   {
+      if (cnt > 1)
+      {
+         int k = cnt / 2;
+         for (int i = low; i < low + k; i++)
+         {
+            cmp_swp(a, i, i + k, dir);
+         }
+         bitonicMerge(a, low, k, dir);
+         bitonicMerge(a, low + k, k, dir);
+      }
+   }
+   void bitonicSort(int a[], int low, int cnt, int dir)
+   {
+      if (cnt>1)
+      {
+         int k = cnt / 2;
+
+         bitonicSort(a, low, k, Ascending);
+         bitonicSort(a, low + k, k, Descending);
+         bitonicMerge(a, low, cnt, dir);
+      }
+   }
+   void sort(int a[], int N, int dir)
+   {
+      bitonicSort(a, 0, N, dir);
+   }
+
+
+};
+int main()
+{
+   int a[count] = { 0 };
+
+   srand((unsigned int)time(NULL));
+   for (int i = 0; i < count; i++)
+   {
+      a[i] = rand();
+   }
+
+   bitonicsort Bitonic;
+
+   
+   Bitonic.sort(a, count, Ascending);
+
+   printf("Sorted array: \n");
+   for (int i = 0; i < count; i++)
+      cout << a[i] << " ";
+   return 0;
+}

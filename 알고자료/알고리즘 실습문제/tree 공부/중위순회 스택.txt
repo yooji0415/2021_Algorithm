@@ -1,0 +1,67 @@
+void BinaryTree::Inorder_Stack(NODE* rootNode)
+
+{
+
+        NODE *indexNode = rootNode;
+
+ 
+
+        m_Stack.Clear();
+
+ 
+
+        while (true)
+
+        {
+
+               //현재 노드에서 도달 할 수 있는 최좌측 노드 찾기 & 경로에 있는 노드들 저장
+
+               while (indexNode != NULL)
+
+               {
+
+                       //현재 노드 저장
+
+                       m_Stack.Push(indexNode);
+
+ 
+
+                       //다음 좌측 노드 지정
+
+                       indexNode = indexNode->Left;
+
+               }
+
+ 
+
+               //스택에 노드가 있다면
+
+               if (!m_Stack.IsEmpty())
+
+               {
+
+                       //가장 늦게 이력된 노드 수령
+
+                       indexNode = m_Stack.Pop();
+
+ 
+
+                       //그 노드 데이터 출력
+
+                       PrintNode(indexNode->Data);
+
+ 
+
+                       //현재 노드의 우측노드를 다음 노드로 => 다음 반복에서 상위 While문에 있는 m_Stack.Push로 스택에 입력됨
+
+                       indexNode = indexNode->Right;
+
+               }
+
+               else
+
+                       break;
+
+        }
+
+}

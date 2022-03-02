@@ -1,0 +1,295 @@
+import java.util.*;
+
+class DefaultComparator<T> implements Comparator<T> {
+   public int compare(T a, T b) {
+      return ((Comparable<T>) a).compareTo(b);
+   }
+}
+class Person implements Comparable<Person>{
+   private String name;
+   private int age;
+   public Person(String n, int a) {
+      name=n;
+      age=a;
+   }
+   public String getName() {
+      return name;
+   }
+   public int getAge() {
+      return age;
+   }
+   public int compareTo(Person that) {
+      if (that.getAge()<this.getAge()) return 1;
+      else if(that.getAge()>this.getAge()) return -1;
+      else return 0;
+   }
+}
+public class TwoFourTree<T extends Comparable<T>> {
+   
+   private static final int M = 3; // num of elems
+   public int k=0;
+   private class TreeNode<T> {
+      protected Comparator<T> c;
+      private T[] elems = (T[]) new Object[M];
+      protected TreeNode<T> children[] = new TreeNode[M + 1];
+      protected TreeNode<T> parent;
+      protected int numberOfelems; //현재 들어간 elem의 수
+      public TreeNode() { // default 생성자
+         System.out.println("TreeNode 생성");
+         c = new DefaultComparator<T>();
+         parent = null;
+         numberOfelems = 0;
+         for (int i = 0; i < M; i++)
+            elems[i] = null;
+         for (int i = 0; i < M + 1; i++)
+            children[i] = null;
+      }
+
+      public int findElem(T x) { // elem을 찾고 index를 반환해주는 함수
+         int flag = -1;
+         for (int i = 0; i < M; i++) {
+            if (elems[i] == null)
+               break;
+            else if (c.compare(x, elems[i]) == 0) //comparator이용 
+               flag = i;
+         }
+         return flag;
+      }
+
+      public int howManyElems() { // 노드안의 elem의 갯수를 반환하는 함수
+         return numberOfelems;
+      }
+
+      public boolean full() { //자기가 full인지 아닌지
+         if (numberOfelems >= M)
+            return true;
+         else
+            return false;
+      }
+
+      public boolean leaf() { //자기가 leaf인지 아닌지
+         if (children[0] == null)
+            return true;
+         else
+            return false;
+      }
+
+      public T getElem(int i) {
+        if (elems[i]==null) return null;
+        else return elems[i];
+      }
+      public TreeNode<T> getChild(int i) {
+         return children[i];
+      }
+
+      public TreeNode<T>[] getChildren() {
+         return children;
+      }
+
+      public T pop() { //노드에 들어있는 제일 큰 값 pop
+         numberOfelems--;
+         T elem = elems[numberOfelems];
+         elems[numberOfelems] = null;
+         return elem;
+      }
+
+      public void createEdge(int i, TreeNode<T> node){ //노드포인터에 새로운 노드 생성
+         children[i] = node;
+         if (node != null)
+            node.parent = this;
+      }
+
+      public TreeNode<T> removeEdge(int i) { //몇번째 노드 포인터를 삭제할지, 삭제한 노드 리턴
+         TreeNode<T> tmp = getChild(i);
+         children[i] = null; //gc에 의해 자동 delete
+         return tmp;
+      }
+
+      public int addNewElem(T obj) { //같은 노드에서 자기자리를 삐집고 들어가기,들어간  elem 인덱스 반환
+         numberOfelems++;
+         int indexToReturn = 0;
+         for (int i = elems.length - 1; i >= 0; i--) {
+            if (elems[i] == null)
+               continue;
+            else {
+               T k = elems[i];
+               if (c.compare(obj, k) < 0) //obj가 작을때
+                  elems[i + 1] = elems[i]; //원래있던거를 옆 elem으로 이동
+               else { //obj가 클떄
+                  elems[i + 1] = obj; //obj가 제일 큰 elem으로 추가만
+                  indexToReturn = i + 1;
+                  break;
+               }
+            }
+         }
+         elems[indexToReturn] = obj;
+         return indexToReturn; //몇번쨰 elem에 들어갔는지
+      }
+
+      public TreeNode<T> parent() {
+         return parent;
+      }
+
+      public String toString() {
+         String str = "I";
+         for (int i = 0; i < howManyElems(); i++)
+            str += elems[i] + "I";
+         return str;
+      }
+   } // TreeNode 클래스 end
+
+   protected TreeNode<T> myRootNode = new TreeNode<T>();
+
+   public TwoFourTree() {
+      System.out.println("생성자");
+   }
+
+   protected TreeNode<T> getChildSibling(TreeNode<T> parent, T x) {//자기가 들어있는 노드나 그 위를 return
+      int numdata = parent.howManyElems();
+      for (int index = 0; index < numdata; index++) {
+         if (x.compareTo(parent.getElem(index)) < 0) //x가 작을떄 
+            return parent.getChild(index);
+      }
+      return parent.getChild(numdata);
+   }
+
+   public boolean belongsTo(T x) { //elem이 들어있는지 확인
+      TreeNode<T> current = myRootNode;
+      while (true) { //무한루프
+         if (current.findElem(x) > -1) //노드가 들어있을때
+            return true;
+         if (current.leaf())  //노드가 리프까지 갔는데 위에서 안걸리면 없음
+            return false;
+         current = getChildSibling(current, x); //current를 한칸 씩 밑으로 내림
+      }
+   }
+
+   protected void split(TreeNode<T> node) { //***********모르겟워
+      //split시 가운데가 위로 올라감
+      T right = node.pop(); //split할 노드중 젤큰값 pop
+      T mid = node.pop(); //중간값 pop
+
+      TreeNode<T> c2 = node.removeEdge(2); //두번째로 큰 자식노드
+      TreeNode<T> c3 = node.removeEdge(3); //젤큰 자식 노드
+      TreeNode<T> parent;
+
+      // case:root
+      if (myRootNode == node) {
+         myRootNode = new TreeNode<T>();
+         parent = myRootNode;
+         myRootNode.createEdge(0, node);
+      }
+
+      // case internel node
+      else
+         parent = node.parent();
+
+      int iAdded = parent.addNewElem(mid); //부모의 노드에 추가
+      int data = parent.howManyElems(); //부모 elem갯수
+
+      for (int i = data - 1; i < iAdded; i--) {
+         TreeNode<T> tmp = parent.removeEdge(i);
+         parent.createEdge(i + 1, tmp);
+      }
+
+      TreeNode<T> rnew = new TreeNode<T>(); //새로운 노드
+      parent.createEdge(iAdded + 1, rnew); //부모 포인터에 새노드 추가
+
+      rnew.addNewElem(right);
+      rnew.createEdge(0, c2);
+      rnew.createEdge(1, c3);
+   }
+
+   public boolean add(T x) { //이 함수가 핵심, 중복을 허용할지 말지 선택해야
+      if (belongsTo(x) == true) //중복 비허용
+         return false;
+      TreeNode<T> current = myRootNode;
+      T tmp = x;
+
+      while (true) { //여기가 핵심
+         if (current.full()) {//current 노드가꽉차있을때
+            split(current);  //split
+            current = getChildSibling(current.parent(), x); //자식 따라 내려감
+            continue;
+         }
+         if (current.leaf()) //마지막 노드일때(leaf에만 삽입 가능)
+            break;
+         current = getChildSibling(current, x); //자식따라 내려감
+      }
+      current.addNewElem(tmp);
+      return true;
+   }
+
+   protected String nodeToString(TreeNode<T> node, int lvl, int child) {
+      String str = "l:" + lvl + " c:" + child + " " + node.toString() + "\n";
+
+      int n = node.howManyElems() + 1;
+      TreeNode<T> aChild;
+      for (int i = 0; i < n; i++) {
+         aChild = node.getChild(i);
+         if (aChild != null)
+            str += nodeToString(aChild, lvl + 1, i);
+      }
+      return str;
+   }
+
+   public void Upsort(TreeNode<T> node) {
+      for(int i=0;i<M+1;i++) {
+         if(node.getChild(i)!=null) Upsort(node.getChild(i));
+         if(i<M &&node.getElem(i)!=null ) System.out.println(node.getElem(i));
+      }
+   }
+   public void Upsort2(TreeNode<T> node,T []arr) {
+      for(int i=0;i<M+1;i++) {
+         if(node.getChild(i)!=null) Upsort2(node.getChild(i),arr);
+         if(i<M &&node.getElem(i)!=null ) arr[k++]=node.getElem(i);
+      }
+   }
+   public void Upstring() {
+      Upsort(myRootNode);
+   }
+   public void Upstring2(T []arr) {
+      Upsort2(myRootNode,arr);
+   }
+   public String toString() {
+      return nodeToString(myRootNode, 0, 0);
+   }
+
+   public static void main(String[] args) {
+      TwoFourTree<Integer> tree = new TwoFourTree<Integer>();
+      TwoFourTree<Person> tree2 = new TwoFourTree<Person>();
+      
+      Person[] arr=new Person[11];//넣을 객체
+      Person[] arr2= new Person[11];//트리로 부터 객체를 담아올 배열
+      arr[0]=new Person("유덕환",10);
+      arr[1]=new Person("김희정",15);
+      arr[2]=new Person("오영택",6);
+      arr[3]=new Person("성인제",8);
+      arr[4]=new Person("정수진",20);
+      arr[5]=new Person("조성욱",25);
+      arr[6]=new Person("박다혜",17) ;
+      arr[7]=new Person("이정우",9);
+      arr[8]=new Person("장호준",14);
+      arr[9]=new Person("김혜진",30);
+      arr[10]=new Person("김주연",50);
+      
+      for(int i=0;i<11;i++)
+         tree2.add(arr[i]);
+      
+      System.out.println("before add");
+      tree.add(9);
+      tree.add(2);
+      tree.add(3);
+      tree.add(4);
+      tree.add(16);
+      tree.add(62);
+      tree.add(36);
+      tree.add(64);
+      tree.Upstring();
+      
+      tree2.Upstring2(arr2);
+      for(int i=0;i<11;i++) {
+         System.out.println(arr2[i].getName() + " : " + arr2[i].getAge());
+      }
+   }
+}
