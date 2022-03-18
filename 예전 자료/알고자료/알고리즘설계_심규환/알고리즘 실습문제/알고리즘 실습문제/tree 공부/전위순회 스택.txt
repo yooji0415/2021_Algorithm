@@ -1,0 +1,48 @@
+void BinaryTree::Preorder_Stack(NODE* rootNode)
+
+{
+
+        NODE* indexNode;
+
+ 
+
+        m_Stack.Clear();
+
+        //스택에 제일먼저 루트를 입력
+
+        m_Stack.Push(rootNode);
+
+ 
+
+        //스택이 빌때까지 반복
+
+        while (!m_Stack.IsEmpty())
+
+        {
+
+               //스텍 최상단 노드 출력
+
+               indexNode = m_Stack.Pop();
+
+ 
+
+               //노드 데이터 프린트
+
+               PrintNode(indexNode->Data);
+
+ 
+
+               //오른쪽 노드가 있다면 스텍에 입력
+
+               StackNode(indexNode->Right);
+
+ 
+
+               //왼쪽 노드가 있다면 스텍에 입력 <= 후입선출(LIFO)이니까 먼저 출력됨
+
+               StackNode(indexNode->Left);
+
+        }
+
+}
+
